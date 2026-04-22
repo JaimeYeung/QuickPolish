@@ -13,13 +13,15 @@ def get_selected_text() -> str | None:
     sentinel = "\x00__qp_sentinel__\x00"
     pyperclip.copy(sentinel)
 
+    time.sleep(0.1)  # let hotkey release before simulating
+
     subprocess.run(
         ["osascript", "-e",
          'tell application "System Events" to keystroke "c" using command down'],
         capture_output=True,
     )
 
-    time.sleep(0.15)
+    time.sleep(0.3)
 
     result = pyperclip.paste()
 

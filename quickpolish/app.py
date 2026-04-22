@@ -80,12 +80,12 @@ class App:
         def on_activate():
             self._on_hotkey()
 
-        h = keyboard.GlobalHotKeys({"<alt>+<space>": on_activate})
+        h = keyboard.GlobalHotKeys({"<ctrl>+g": on_activate})
         h.daemon = True
         h.start()
 
     def run(self):
         self._start_hotkey_listener()
         self._root.after(100, self._poll_queue)
-        print("QuickPolish running. Press ⌥Space on selected text. Ctrl+C to quit.")
+        print("QuickPolish running. Press ⌃G on selected text. Ctrl+C to quit.")
         self._root.mainloop()

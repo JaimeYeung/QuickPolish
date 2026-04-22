@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 DEFAULTS = {
-    "hotkey": "alt+space",
+    "hotkey": "ctrl+g",
     "model": "gpt-4o",
     "openai_api_key": None,
 }

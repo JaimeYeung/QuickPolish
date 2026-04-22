@@ -10,7 +10,7 @@ Select any text, press a hotkey, and get a polished version in seconds. Works in
 2. Press **Control + Option + Q**
 3. A preview window appears with three modes:
    - **Natural** — casual, like texting a friend
-   - **Professional** — for emails and interviews
+   - **Professional** — for work emails and formal communication
    - **Shorter** — same meaning, fewer words
 4. Press **Tab** to switch modes, **Enter** to replace, **Esc** to cancel
 

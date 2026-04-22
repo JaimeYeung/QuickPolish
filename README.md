@@ -7,14 +7,14 @@ QuickPolish cuts out all of that. Select any text, press a hotkey, and get a pol
 ## Demo
 
 1. Select text in any app
-2. Press **Control + Option + Q**
+2. Press **Control + G**
 3. A preview window appears with three modes:
-   - **Natural** — casual, like texting a friend
-   - **Professional** — for work emails and formal communication
-   - **Shorter** — same meaning, fewer words
+   - **Natural**: casual, like texting a friend
+   - **Professional**: for work emails and formal communication
+   - **Shorter**: same meaning, fewer words
 4. Press **Tab** to switch modes, **Enter** to replace, **Esc** to cancel
 
-Supports English, Chinese, and Chinglish input — always outputs natural American English.
+Supports English, Chinese, and Chinglish input. Always outputs natural American English.
 
 ## Setup
 

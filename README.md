@@ -1,8 +1,8 @@
 # QuickPolish
 
-Fix grammar and rewrite selected text using AI — without leaving your app.
+Writing in English takes extra effort when it's not your first language. You know what you want to say, but getting it to sound right takes time. And fixing it usually means jumping to another app, copy-pasting, then switching back.
 
-Select any text, press a hotkey, and get a polished version in seconds. Works in any macOS app (Gmail, Notion, Messages, etc.).
+QuickPolish cuts out all of that. Select any text, press a hotkey, and get a polished version in seconds without leaving what you're working on. Works in any macOS app: Gmail, Notion, Slack, Messages, anywhere.
 
 ## Demo
 

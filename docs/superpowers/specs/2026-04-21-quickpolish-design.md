@@ -10,13 +10,14 @@ QuickPolish is a lightweight macOS background app that corrects grammar and rewr
 ## User Flow
 
 1. User selects text in any macOS app (email, Notion, browser, etc.)
-2. User presses **⌥Space** (Option + Space)
+2. User presses **⌃G** (Control + G)
 3. App simulates Cmd+C to copy selected text
 4. Three parallel OpenAI API requests are sent (Natural, Professional, Shorter)
 5. Preview window appears (~1–2 seconds) showing the Natural result by default
 6. User optionally presses **Tab** to cycle through modes: Natural → Professional → Shorter → Natural
-7. User presses **Enter** to accept → app writes result to clipboard → simulates Cmd+V to replace original text
-8. Or presses **Esc** to cancel → window closes, original text unchanged
+7. User optionally edits the preview text directly in the window. Per-mode edits are preserved when cycling with Tab. **Shift+Enter** inserts a newline inside the editor.
+8. User presses **Enter** to accept → app writes result to clipboard → simulates Cmd+V to replace original text
+9. Or presses **Esc** to cancel → window closes, original text unchanged
 
 ---
 
@@ -33,12 +34,14 @@ Small floating window, always on top, centered on screen:
 ├─────────────────────────────────┤
 │  [Natural]  Professional  Shorter│
 ├─────────────────────────────────┤
-│  ↩ Replace      Tab Switch  Esc │
+│  ↩ Replace  ⇧↩ Newline  Tab  Esc│
 └─────────────────────────────────┘
 ```
 
 - Current mode shown in brackets
 - Tab cycles modes instantly (all 3 results pre-fetched in parallel)
+- Text area is an editable multi-line field once results arrive; edits made in one mode persist when cycling with Tab
+- Shift+Enter inserts a newline inside the editor; plain Enter always means "accept and paste"
 - Loading spinner shown while API requests are in flight
 
 ---
@@ -57,6 +60,7 @@ Small floating window, always on top, centered on screen:
 - Do not translate literally. Understand the intended meaning and express it the way a native American English speaker would naturally say it.
 - Do not sound like an AI assistant. The output should feel like it was written by a real person who writes well.
 - Do not add words or phrases that weren't implied by the original.
+- Do not use em dashes (—) or en dashes (–). They are a strong AI signal. Use commas, periods, or parentheses instead. Regular hyphens in compound words like "well-known" are fine. The rewriter also strips any stray em/en dashes from model output as a safety net.
 
 ---
 
@@ -65,7 +69,7 @@ Small floating window, always on top, centered on screen:
 Single Python process, runs in the background as a macOS menubar app.
 
 ```
-pynput          — global hotkey listener (⌥Space)
+pynput          — global hotkey listener (⌃G, via keyboard.HotKey + Listener)
 pyperclip       — read/write clipboard
 osascript       — simulate Cmd+C and Cmd+V keystrokes
 openai          — OpenAI API (gpt-4o, 3 parallel async requests)
@@ -75,11 +79,11 @@ rumps            — macOS menubar icon and menu
 
 ### Component breakdown
 
-- **hotkey_listener.py** — registers global ⌥Space hotkey, triggers the pipeline
+- **hotkey_listener.py** — registers global ⌃G hotkey, triggers the pipeline
 - **text_grabber.py** — simulates Cmd+C, reads clipboard, returns selected text
-- **rewriter.py** — sends 3 async OpenAI requests, returns dict of {mode: result}
-- **preview_window.py** — tkinter floating window, handles Tab/Enter/Esc
-- **replacer.py** — writes result to clipboard, simulates Cmd+V
+- **rewriter.py** — sends 3 async OpenAI requests, strips AI-style em/en dashes from the output, returns dict of {mode: result}
+- **preview_window.py** — tkinter floating window with an editable text area; handles Tab (switch mode, preserves per-mode edits), Enter (accept), Shift+Enter (newline), Esc (cancel)
+- **replacer.py** — writes result to clipboard, reactivates the original app, simulates Cmd+V
 - **menubar.py** — rumps menubar icon, settings (hotkey, API key), quit
 
 ---
@@ -97,7 +101,7 @@ rumps            — macOS menubar icon and menu
 
 Stored in `~/.quickpolish/config.json`:
 - `openai_api_key` — OpenAI API key
-- `hotkey` — default `alt+space`
+- `hotkey` — default `ctrl+g`
 - `model` — default `gpt-4o`
 
 ---

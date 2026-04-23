@@ -20,8 +20,13 @@ class WindowState:
         return any(v.startswith("[error:") for v in self._results.values())
 
     def set_results(self, results: dict[str, str]) -> None:
-        self._results = results
+        # Copy so later edits via update_current_text don't mutate the caller's dict.
+        self._results = dict(results)
         self.is_loading = False
 
     def cycle_mode(self) -> None:
         self._mode_index = (self._mode_index + 1) % len(MODES)
+
+    def update_current_text(self, text: str) -> None:
+        """Persist an edited result for the current mode so Tab-cycling keeps edits."""
+        self._results[self.current_mode] = text

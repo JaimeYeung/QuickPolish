@@ -61,3 +61,26 @@ def test_no_error_on_normal_results():
     state = WindowState()
     state.set_results(RESULTS)
     assert state.has_error is False
+
+
+def test_update_current_text_persists_across_mode_cycle():
+    state = WindowState()
+    state.set_results(RESULTS)
+    state.update_current_text("my edited natural")
+    state.cycle_mode()
+    assert state.current_text == "That works for me."  # professional untouched
+    state.cycle_mode()
+    state.cycle_mode()  # back to natural
+    assert state.current_text == "my edited natural"
+
+
+def test_update_current_text_only_affects_current_mode():
+    state = WindowState()
+    state.set_results(RESULTS)
+    state.cycle_mode()  # on professional
+    state.update_current_text("edited pro")
+    assert state.current_text == "edited pro"
+    state.cycle_mode()
+    assert state.current_text == "Works for me."  # shorter untouched
+    state.cycle_mode()
+    assert state.current_text == "Hey, sounds good to me."  # natural untouched

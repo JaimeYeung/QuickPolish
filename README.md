@@ -12,7 +12,8 @@ QuickPolish cuts out all of that. Select any text, press a hotkey, and get a pol
    - **Natural**: casual, like texting a friend
    - **Professional**: for work emails and formal communication
    - **Shorter**: same meaning, fewer words
-4. Press **Tab** to switch modes, **Enter** to replace, **Esc** to cancel
+4. Optionally edit the preview text directly (use **Shift+Enter** for a newline)
+5. Press **Tab** to switch modes, **Enter** to replace, **Esc** to cancel
 
 Supports English, Chinese, and Chinglish input. Always outputs natural American English.
 

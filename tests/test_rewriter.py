@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from quickpolish.rewriter import Rewriter, MODES
+from quickpolish.rewriter import Rewriter, MODES, strip_ai_dashes
 
 
 def make_mock_response(text: str):
@@ -47,3 +47,38 @@ def test_rewrite_all_on_api_error_returns_error_string(mocker):
 
     for mode in MODES:
         assert "error" in results[mode].lower()
+
+
+def test_strip_ai_dashes_replaces_em_dash():
+    assert strip_ai_dashes("I think this works — let me know") == "I think this works, let me know"
+
+
+def test_strip_ai_dashes_replaces_en_dash():
+    assert strip_ai_dashes("pages 10–20 are key") == "pages 10, 20 are key"
+
+
+def test_strip_ai_dashes_keeps_regular_hyphen_in_compound_words():
+    assert strip_ai_dashes("This is a well-known issue") == "This is a well-known issue"
+
+
+def test_strip_ai_dashes_handles_no_spaces_around_em_dash():
+    assert strip_ai_dashes("fast—but fragile") == "fast, but fragile"
+
+
+def test_strip_ai_dashes_collapses_doubles():
+    # Dash right next to existing punctuation shouldn't leave ", ,"
+    assert strip_ai_dashes("good, — really") == "good, really"
+
+
+def test_rewrite_all_strips_em_dashes_from_model_output(mocker):
+    client = MagicMock()
+    client.chat.completions.create.return_value = make_mock_response(
+        "It's fine — honestly, it works"
+    )
+    rewriter = Rewriter(client=client, model="gpt-4o")
+
+    results = rewriter.rewrite_all("whatever")
+
+    for mode in MODES:
+        assert "—" not in results[mode]
+        assert "–" not in results[mode]

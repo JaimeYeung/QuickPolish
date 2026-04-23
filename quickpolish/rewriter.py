@@ -1,3 +1,4 @@
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 
@@ -8,19 +9,20 @@ SYSTEM_PROMPT = """You are a text rewriter. The user will give you text that may
 Your job: understand the intended meaning and express it in natural American English.
 
 Rules:
-- Always output English only
-- Do not translate literally — understand the intent and express it the way a native speaker would
-- Do not add meaning that wasn't there
-- Do not sound like AI. No "Certainly!", no "I hope this helps", no filler
+- Always output English only.
+- Do not translate literally. Understand the intent and express it the way a native speaker would.
+- Do not add meaning that wasn't there.
+- Do not sound like AI. No "Certainly!", no "I hope this helps", no filler.
+- Never use em dashes (—) or en dashes (–) anywhere in the output. Use a comma, period, or parentheses instead. Regular hyphens in compound words like "well-known" are fine.
 - Return ONLY the rewritten text, nothing else. No quotes, no explanation."""
 
 USER_PROMPTS = {
     "natural": (
-        "Rewrite this in casual, natural American English — the way you'd text a friend. "
+        "Rewrite this in casual, natural American English, the way you'd text a friend. "
         "Keep it chill and real.\n\nText: {text}"
     ),
     "professional": (
-        "Rewrite this for a professional email. Sound confident, direct, and warm — like a real person, not a robot. "
+        "Rewrite this for a professional email. Sound confident, direct, and warm, like a real person, not a robot. "
         "No corporate filler: no 'I hope this email finds you well', no 'please don't hesitate to reach out', "
         "no 'as per my previous email'.\n\nText: {text}"
     ),
@@ -29,6 +31,24 @@ USER_PROMPTS = {
         "Keep the meaning and tone. Remove redundancy without losing the point.\n\nText: {text}"
     ),
 }
+
+
+# Matches em dash / en dash / horizontal bar, optionally surrounded by spaces.
+# We leave regular ASCII hyphens ("-") alone so compound words like
+# "well-known" aren't destroyed.
+_DASH_RE = re.compile(r"\s*[\u2014\u2013\u2015]\s*")
+
+
+def strip_ai_dashes(text: str) -> str:
+    """Replace em/en dashes with a comma+space; collapse accidental doubles."""
+    if not text:
+        return text
+    cleaned = _DASH_RE.sub(", ", text)
+    # Avoid ", ," / " , " artifacts if a dash was adjacent to existing punctuation.
+    cleaned = re.sub(r"\s+,", ",", cleaned)
+    cleaned = re.sub(r",\s*,", ",", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    return cleaned.strip()
 
 
 class Rewriter:
@@ -47,7 +67,8 @@ class Rewriter:
                 max_tokens=1000,
                 temperature=0.7,
             )
-            return mode, resp.choices[0].message.content.strip()
+            content = resp.choices[0].message.content.strip()
+            return mode, strip_ai_dashes(content)
         except Exception as e:
             return mode, f"[error: {e}]"
 

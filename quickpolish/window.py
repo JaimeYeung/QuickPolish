@@ -24,9 +24,6 @@ class PreviewWindow(tk.Toplevel):
         self.bind("<Tab>", self._on_tab)
         self.bind("<Return>", self._on_enter)
         self.bind("<Escape>", self._on_esc)
-        self._text_box.bind("<Return>", self._on_enter)
-        self._text_box.bind("<Tab>", self._on_tab)
-        self._text_box.bind("<Escape>", self._on_esc)
         self.focus_force()
 
     def _setup_window(self):
@@ -48,12 +45,11 @@ class PreviewWindow(tk.Toplevel):
 
         self._text_frame = tk.Frame(self, bg=BG, padx=14, pady=14)
         self._text_frame.pack(fill="both", expand=True)
-        self._text_box = tk.Text(
-            self._text_frame, bg=BG, fg=FG, font=FONT_MAIN,
-            wrap="word", relief="flat", borderwidth=0,
-            insertbackground=FG, height=5,
+        self._text_label = tk.Label(
+            self._text_frame, text="", bg=BG, fg=FG,
+            font=FONT_MAIN, wraplength=WIDTH - 28, justify="left", anchor="nw",
         )
-        self._text_box.pack(fill="both", expand=True)
+        self._text_label.pack(fill="both", expand=True)
 
         mode_bar = tk.Frame(self, bg="#2a2a2a", padx=14, pady=8)
         mode_bar.pack(fill="x")
@@ -69,22 +65,15 @@ class PreviewWindow(tk.Toplevel):
         tk.Label(footer, text="↩ Replace    Tab Switch    Esc Cancel",
                  bg="#2a2a2a", fg=MUTED, font=FONT_SMALL).pack(side="left")
 
-    def _set_text(self, text: str, color: str = None):
-        self._text_box.config(state="normal")
-        self._text_box.delete("1.0", "end")
-        self._text_box.insert("1.0", text)
-        self._text_box.config(fg=color or FG)
-
     def _render(self):
         if self._state.is_loading:
-            self._set_text("Rewriting…", MUTED)
-            self._text_box.config(state="disabled")
+            self._text_label.config(text="Rewriting…", fg=MUTED)
             for lbl in self._mode_labels.values():
                 lbl.config(fg=MUTED, font=FONT_SMALL)
         else:
-            self._set_text(
-                self._state.current_text,
-                "#ff6b6b" if self._state.has_error else FG,
+            self._text_label.config(
+                text=self._state.current_text,
+                fg="#ff6b6b" if self._state.has_error else FG,
             )
             for mode, lbl in self._mode_labels.items():
                 if mode == self._state.current_mode:
@@ -103,9 +92,8 @@ class PreviewWindow(tk.Toplevel):
 
     def _on_enter(self, _event):
         if not self._state.is_loading and not self._state.has_error:
-            text = self._text_box.get("1.0", "end-1c").rstrip("\n")
-            self.destroy()
-            self._on_accept(text)
+            text = self._state.current_text
+            self._on_accept(text)  # on_accept destroys window at the right time
         return "break"
 
     def _on_esc(self, _event):

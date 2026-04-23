@@ -55,11 +55,22 @@ class App:
         state = WindowState()
 
         def on_accept(result: str):
+            # Runs on the Tk main thread (from the window's <Return> handler).
             self._active_window = None
-            replace_selected(result, target_app)
+            if win.winfo_exists():
+                win.destroy()
+            # Paste in a background thread so we don't block the Tk main loop
+            # while osascript activates the target app.
+            threading.Thread(
+                target=replace_selected,
+                args=(result, target_app),
+                daemon=True,
+            ).start()
 
         def on_cancel():
             self._active_window = None
+            if win.winfo_exists():
+                win.destroy()
 
         win = PreviewWindow(self._root, state, on_accept=on_accept, on_cancel=on_cancel)
         self._active_window = win
@@ -77,12 +88,32 @@ class App:
         threading.Thread(target=fetch, daemon=True).start()
 
     def _start_hotkey_listener(self):
-        def on_activate():
-            self._on_hotkey()
+        # Avoid pynput.keyboard.GlobalHotKeys on macOS: in some pynput versions
+        # its internal _on_press signature doesn't match what the darwin backend
+        # calls, which raises
+        #   TypeError: GlobalHotKeys._on_press() missing 1 required positional argument: 'injected'
+        # Use HotKey + Listener instead — this is pynput's recommended pattern
+        # and it doesn't hit that buggy class at all.
+        hotkey = keyboard.HotKey(
+            keyboard.HotKey.parse("<ctrl>+g"),
+            self._on_hotkey,
+        )
 
-        h = keyboard.GlobalHotKeys({"<ctrl>+g": on_activate})
-        h.daemon = True
-        h.start()
+        def _for_canonical(f):
+            def wrapped(k):
+                try:
+                    f(listener.canonical(k))
+                except Exception:
+                    # Never let a stray event kill the listener thread.
+                    pass
+            return wrapped
+
+        listener = keyboard.Listener(
+            on_press=_for_canonical(hotkey.press),
+            on_release=_for_canonical(hotkey.release),
+        )
+        listener.daemon = True
+        listener.start()
 
     def run(self):
         self._start_hotkey_listener()
